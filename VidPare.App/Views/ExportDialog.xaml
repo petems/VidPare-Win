@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="VidPare.App.Views.ExportDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Export"
+    PrimaryButtonText="Export"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary"
+    Style="{StaticResource DefaultContentDialogStyle}"
+    PrimaryButtonClick="Export_Click">
+
+    <StackPanel Spacing="16" MinWidth="320">
+        <!-- Trim range info -->
+        <TextBlock x:Name="trimInfoText"
+                   FontSize="13"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+        <!-- Format picker -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Format" FontSize="13" FontWeight="SemiBold" />
+            <ComboBox x:Name="formatPicker"
+                      HorizontalAlignment="Stretch"
+                      SelectionChanged="FormatPicker_SelectionChanged">
+                <ComboBoxItem Content="MP4 (H.264)" Tag="MP4H264" IsSelected="True" />
+                <ComboBoxItem Content="MP4 (HEVC)" Tag="MP4HEVC" />
+            </ComboBox>
+        </StackPanel>
+
+        <!-- Quality picker -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Quality" FontSize="13" FontWeight="SemiBold" />
+            <ComboBox x:Name="qualityPicker"
+                      HorizontalAlignment="Stretch"
+                      SelectionChanged="QualityPicker_SelectionChanged">
+                <ComboBoxItem Content="Original (source quality)" Tag="Original" IsSelected="True" />
+                <ComboBoxItem Content="High (1080p)" Tag="High" />
+                <ComboBoxItem Content="Medium (720p)" Tag="Medium" />
+                <ComboBoxItem Content="Low (480p)" Tag="Low" />
+            </ComboBox>
+        </StackPanel>
+
+        <!-- Progress -->
+        <StackPanel x:Name="progressPanel" Visibility="Collapsed" Spacing="8">
+            <ProgressBar x:Name="exportProgress"
+                         Minimum="0" Maximum="100"
+                         Value="0" />
+            <TextBlock x:Name="progressText"
+                       Text="Exporting..."
+                       FontSize="12"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
+    </StackPanel>
+</ContentDialog>

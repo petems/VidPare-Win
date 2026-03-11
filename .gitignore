@@ -1,0 +1,53 @@
+## Build output
+bin/
+obj/
+out/
+publish/
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## MSIX / packaging artifacts
+AppPackages/
+BundleArtifacts/
+*.msix
+*.msixbundle
+*.appx
+*.appxbundle
+*.appxupload
+
+## Code signing — never commit private keys
+*.pfx
+*.p12
+
+## NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## .NET tooling
+.dotnet/
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+*.trx
+
+## Rider / JetBrains
+.idea/
+*.sln.iml
+
+## Rider generated files (WinUI XAML)
+_ReSharper*/
+
+## OS
+Thumbs.db
+Desktop.ini
+.DS_Store

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="VidPare.App.Views.TimelineView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Canvas x:Name="timelineCanvas"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                PointerPressed="Timeline_PointerPressed"
+                PointerMoved="Timeline_PointerMoved"
+                PointerReleased="Timeline_PointerReleased"
+                SizeChanged="Timeline_SizeChanged"
+                MinHeight="60" />
+    </Grid>
+</UserControl>

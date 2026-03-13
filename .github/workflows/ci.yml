@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    name: Build (Release x64)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/VidPare.Core/VidPare.Core.csproj', '**/VidPare.App/VidPare.App.csproj', 'global.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore VidPare.sln
+
+      - name: Build
+        run: dotnet build VidPare.sln --configuration Release --no-restore -p:Platform=x64
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vidpare-build-${{ github.run_number }}
+          path: VidPare.App/bin/x64/Release/
+          retention-days: 7
+
+  test-core:
+    name: Unit Tests (VidPare.Core)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/VidPare.Core/VidPare.Core.csproj', '**/VidPare.Core.Tests/VidPare.Core.Tests.csproj', 'global.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore VidPare.Core.Tests/VidPare.Core.Tests.csproj
+
+      - name: Test
+        run: >
+          dotnet test VidPare.Core.Tests/VidPare.Core.Tests.csproj
+          --configuration Release
+          --logger "trx;LogFileName=core-tests.trx"
+          --results-directory TestResults
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ github.run_number }}
+          path: TestResults/*.trx
+          retention-days: 14

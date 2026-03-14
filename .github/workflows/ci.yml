@@ -31,7 +31,7 @@ jobs:
         run: dotnet restore VidPare.sln
 
       - name: Build
-        run: dotnet build VidPare.sln --configuration Release --no-restore -p:Platform=x64
+        run: dotnet build VidPare.sln --configuration Release --no-restore
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

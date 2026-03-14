@@ -27,11 +27,14 @@ jobs:
           restore-keys: |
             nuget-${{ runner.os }}-
 
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
       - name: Restore
-        run: dotnet restore VidPare.sln
+        run: msbuild VidPare.sln /t:Restore /p:Configuration=Release /p:Platform="Any CPU"
 
       - name: Build
-        run: dotnet build VidPare.sln --configuration Release --no-restore
+        run: msbuild VidPare.sln /p:Configuration=Release /p:Platform="Any CPU" /m
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

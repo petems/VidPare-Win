@@ -27,11 +27,14 @@ jobs:
           languages: csharp
           build-mode: manual
 
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
       - name: Restore
-        run: dotnet restore VidPare.sln
+        run: msbuild VidPare.sln /t:Restore /p:Configuration=Release /p:Platform="Any CPU"
 
       - name: Build for CodeQL
-        run: dotnet build VidPare.sln --configuration Release --no-restore
+        run: msbuild VidPare.sln /p:Configuration=Release /p:Platform="Any CPU" /m
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4

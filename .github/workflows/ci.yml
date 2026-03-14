@@ -27,14 +27,22 @@ jobs:
           restore-keys: |
             nuget-${{ runner.os }}-
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+      - name: Link VS build tasks for WinUI 3
+        shell: pwsh
+        run: |
+          # MrtCore.PriGen.targets expects PRI tasks in the dotnet SDK dir,
+          # but they only ship with Visual Studio. Create a junction.
+          $sdkVer = & dotnet --version
+          $target = "C:\Program Files\dotnet\sdk\$sdkVer\Microsoft\VisualStudio\v17.0"
+          $vsSource = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Microsoft\VisualStudio\v17.0"
+          New-Item -ItemType Directory -Path $target -Force | Out-Null
+          cmd /c mklink /J "$target\AppxPackage" "$vsSource\AppxPackage"
 
       - name: Restore
-        run: msbuild VidPare.sln /t:Restore /p:Configuration=Release /p:Platform="Any CPU"
+        run: dotnet restore VidPare.sln
 
       - name: Build
-        run: msbuild VidPare.sln /p:Configuration=Release /p:Platform="Any CPU" /m
+        run: dotnet build VidPare.sln --configuration Release --no-restore
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

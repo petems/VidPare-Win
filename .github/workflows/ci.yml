@@ -84,3 +84,47 @@ jobs:
           name: test-results-${{ github.run_number }}
           path: TestResults/*.trx
           retention-days: 14
+
+  test-acceptance:
+    name: Acceptance Tests (VidPare.App)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/VidPare.App/VidPare.App.csproj', '**/VidPare.App.Tests/VidPare.App.Tests.csproj', 'global.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Link VS build tasks for WinUI 3
+        shell: pwsh
+        run: |
+          $sdkVer = & dotnet --version
+          $target = "C:\Program Files\dotnet\sdk\$sdkVer\Microsoft\VisualStudio\v17.0"
+          $vsSource = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Microsoft\VisualStudio\v17.0"
+          New-Item -ItemType Directory -Path $target -Force | Out-Null
+          cmd /c mklink /J "$target\AppxPackage" "$vsSource\AppxPackage"
+
+      - name: Restore
+        run: dotnet restore VidPare.App.Tests/VidPare.App.Tests.csproj
+
+      - name: Test
+        run: >
+          dotnet test VidPare.App.Tests/VidPare.App.Tests.csproj
+          --configuration Release
+          --runtime win-x64
+          --logger "trx;LogFileName=acceptance-tests.trx"
+          --results-directory TestResults
+
+      - name: Upload acceptance test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: acceptance-test-results-${{ github.run_number }}
+          path: TestResults/*.trx
+          retention-days: 14

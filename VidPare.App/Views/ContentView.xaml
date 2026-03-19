@@ -8,6 +8,7 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <!-- Empty state: drop prompt -->
         <Grid x:Name="emptyState"
+              AutomationProperties.AutomationId="EmptyState"
               AllowDrop="True"
               DragOver="Grid_DragOver"
               Drop="Grid_Drop">
@@ -53,6 +54,7 @@
 
         <!-- Editor state: player + controls + timeline -->
         <Grid x:Name="editorState"
+              AutomationProperties.AutomationId="EditorState"
               Visibility="Collapsed"
               AllowDrop="True"
               DragOver="Grid_DragOver"
@@ -90,6 +92,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Name="fileInfoText"
+                           AutomationProperties.AutomationId="FileInfoText"
                            Grid.Column="0"
                            VerticalAlignment="Center"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"

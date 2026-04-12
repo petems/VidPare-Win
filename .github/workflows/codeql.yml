@@ -1,0 +1,55 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: '0 3 * * 1'   # Weekly on Monday at 03:00 UTC
+
+jobs:
+  analyze:
+    name: Analyze (csharp)
+    runs-on: windows-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: csharp
+          build-mode: manual
+
+      - name: Link VS build tasks for WinUI 3
+        shell: pwsh
+        run: |
+          $sdkVer = & dotnet --version
+          $target = "C:\Program Files\dotnet\sdk\$sdkVer\Microsoft\VisualStudio\v17.0"
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsInstall = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+          if (-not $vsInstall) { throw "Visual Studio MSBuild installation not found." }
+          $vsSource = Join-Path $vsInstall "MSBuild\Microsoft\VisualStudio\v17.0\AppxPackage"
+          if (-not (Test-Path $vsSource)) { throw "AppxPackage tasks not found at '$vsSource'." }
+          New-Item -ItemType Directory -Path $target -Force | Out-Null
+          $appxTarget = Join-Path $target "AppxPackage"
+          if (-not (Test-Path $appxTarget)) {
+            cmd /c mklink /J "$appxTarget" "$vsSource" | Out-Null
+          }
+
+      - name: Restore
+        run: dotnet restore VidPare.sln
+
+      - name: Build for CodeQL
+        run: dotnet build VidPare.sln --configuration Release --no-restore
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:csharp

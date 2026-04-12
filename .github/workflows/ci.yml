@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    name: Build (Release x64)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/VidPare.Core/VidPare.Core.csproj', '**/VidPare.App/VidPare.App.csproj', 'global.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Link VS build tasks for WinUI 3
+        shell: pwsh
+        run: |
+          # MrtCore.PriGen.targets expects PRI tasks in the dotnet SDK dir,
+          # but they only ship with Visual Studio. Create a junction.
+          $sdkVer = & dotnet --version
+          $target = "C:\Program Files\dotnet\sdk\$sdkVer\Microsoft\VisualStudio\v17.0"
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsInstall = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+          if (-not $vsInstall) { throw "Visual Studio MSBuild installation not found." }
+          $vsSource = Join-Path $vsInstall "MSBuild\Microsoft\VisualStudio\v17.0\AppxPackage"
+          if (-not (Test-Path $vsSource)) { throw "AppxPackage tasks not found at '$vsSource'." }
+          New-Item -ItemType Directory -Path $target -Force | Out-Null
+          $appxTarget = Join-Path $target "AppxPackage"
+          if (-not (Test-Path $appxTarget)) {
+            cmd /c mklink /J "$appxTarget" "$vsSource" | Out-Null
+          }
+
+      - name: Restore
+        run: dotnet restore VidPare.sln
+
+      - name: Build
+        run: dotnet build VidPare.sln --configuration Release --no-restore
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vidpare-build-${{ github.run_number }}
+          path: VidPare.App/bin/x64/Release/
+          retention-days: 7
+
+  test-core:
+    name: Unit Tests (VidPare.Core)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/VidPare.Core/VidPare.Core.csproj', '**/VidPare.Core.Tests/VidPare.Core.Tests.csproj', 'global.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore VidPare.Core.Tests/VidPare.Core.Tests.csproj
+
+      - name: Test
+        run: >
+          dotnet test VidPare.Core.Tests/VidPare.Core.Tests.csproj
+          --configuration Release
+          --logger "trx;LogFileName=core-tests.trx"
+          --results-directory TestResults
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ github.run_number }}
+          path: TestResults/*.trx
+          retention-days: 14

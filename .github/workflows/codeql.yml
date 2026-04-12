@@ -32,9 +32,16 @@ jobs:
         run: |
           $sdkVer = & dotnet --version
           $target = "C:\Program Files\dotnet\sdk\$sdkVer\Microsoft\VisualStudio\v17.0"
-          $vsSource = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Microsoft\VisualStudio\v17.0"
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsInstall = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+          if (-not $vsInstall) { throw "Visual Studio MSBuild installation not found." }
+          $vsSource = Join-Path $vsInstall "MSBuild\Microsoft\VisualStudio\v17.0\AppxPackage"
+          if (-not (Test-Path $vsSource)) { throw "AppxPackage tasks not found at '$vsSource'." }
           New-Item -ItemType Directory -Path $target -Force | Out-Null
-          cmd /c mklink /J "$target\AppxPackage" "$vsSource\AppxPackage"
+          $appxTarget = Join-Path $target "AppxPackage"
+          if (-not (Test-Path $appxTarget)) {
+            cmd /c mklink /J "$appxTarget" "$vsSource" | Out-Null
+          }
 
       - name: Restore
         run: dotnet restore VidPare.sln

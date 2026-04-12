@@ -4,7 +4,7 @@
 
 Three workflow files covering continuous integration, releases, and optional security scanning.
 
-```
+```text
 .github/
   workflows/
     ci.yml        # Build + tests on every push and PR
